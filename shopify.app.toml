@@ -2,7 +2,7 @@
 
 client_id = "7016cf620debcaeccdb2bb09403b87cd"
 name = "hide-cod-app"
-application_url = "https://example.com"
+application_url = "https://hide-cod-app.vercel.app"
 embedded = true
 
 [build]
@@ -24,4 +24,4 @@ api_version = "2026-04"
 scopes = "read_payment_customizations,write_payment_customizations"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://hide-cod-app.vercel.app/auth/callback" ]
