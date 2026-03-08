@@ -22,7 +22,7 @@ export default function App() {
   return (
     <div className={styles.index}>
       <div className={styles.content}>
-        <h1 className={styles.heading}>Hide COD for Gift Cards</h1>
+        <h1 className={styles.heading}>CODBlock</h1>
         <p className={styles.text}>
           Automatically hides the Cash on Delivery payment method when the cart
           contains a gift card product.

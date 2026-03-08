@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * One-time script to activate the Hide COD payment customization.
+ * One-time script to activate the CODBlock payment customization.
  *
  * Usage:
  *   SHOPIFY_ACCESS_TOKEN=<token> SHOPIFY_STORE=<store>.myshopify.com node scripts/activate.js
@@ -38,7 +38,7 @@ async function main() {
   console.log(`\nConnecting to ${STORE}...\n`);
 
   // Step 1: Find the function
-  console.log("Step 1: Finding the Hide COD function...");
+  console.log("Step 1: Finding the CODBlock function...");
   const functionsResult = await graphql(`{
     shopifyFunctions(first: 25, apiType: "payment_customization") {
       nodes {
@@ -51,11 +51,11 @@ async function main() {
 
   const functions = functionsResult.data?.shopifyFunctions?.nodes ?? [];
   const ourFunction = functions.find(
-    (fn) => fn.title === "Hide COD for Gift Cards",
+    (fn) => fn.title === "CODBlock",
   );
 
   if (!ourFunction) {
-    console.error("ERROR: Could not find the Hide COD function.");
+    console.error("ERROR: Could not find the CODBlock function.");
     console.error("Available functions:", functions.map((f) => f.title));
     process.exit(1);
   }
@@ -127,7 +127,7 @@ async function main() {
     {
       input: {
         functionId: ourFunction.id,
-        title: "Hide COD for Gift Cards",
+        title: "CODBlock",
         enabled: true,
       },
     },

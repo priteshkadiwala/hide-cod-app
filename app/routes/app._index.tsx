@@ -83,7 +83,7 @@ async function findFunction(admin: any) {
   const functionsData = await functionsResponse.json();
   const functions = functionsData.data?.shopifyFunctions?.nodes ?? [];
   return functions.find(
-    (fn: any) => fn.title === "Hide COD for Gift Cards",
+    (fn: any) => fn.title === "CODBlock",
   );
 }
 
@@ -106,7 +106,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       status: "not_deployed" as const,
       enabled: false,
       message:
-        "Could not find the Hide COD function. Make sure the extension is deployed.",
+        "Could not find the CODBlock function. Make sure the extension is deployed.",
     });
   }
 
@@ -149,7 +149,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         status: "not_deployed" as const,
         enabled: false,
         message:
-          "Could not find the Hide COD function. Deploy the extension first.",
+          "Could not find the CODBlock function. Deploy the extension first.",
       });
     }
 
@@ -163,7 +163,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             variables: {
               paymentCustomization: {
                 functionId: ourFunction.id,
-                title: "Hide COD for Gift Cards",
+                title: "CODBlock",
                 enabled: true,
               },
             },
@@ -285,7 +285,7 @@ export default function Index() {
 
   return (
     <Page>
-      <TitleBar title="Hide COD for Gift Cards" />
+      <TitleBar title="CODBlock" />
       <BlockStack gap="500">
         <Layout>
           <Layout.Section>

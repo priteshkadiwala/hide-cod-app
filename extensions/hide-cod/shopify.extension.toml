@@ -2,7 +2,7 @@ api_version = "2025-04"
 
 [[extensions]]
 handle = "hide-cod"
-name = "Hide COD for Gift Cards"
+name = "CODBlock"
 uid = "92646719-3161-8267-b6b4-b6eff9f336009a816961"
 type = "function"
 

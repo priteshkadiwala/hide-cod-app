@@ -4,14 +4,14 @@ export default function PrivacyPolicy() {
       <div style={styles.container}>
         <h1 style={styles.title}>Privacy Policy</h1>
         <p style={styles.subtitle}>
-          <strong>Hide COD for Gift Cards</strong> — operated by Mellow Muffin
+          <strong>CODBlock</strong> — operated by Mellow Muffin
           Apps
         </p>
         <p style={styles.updated}>Last updated: March 8, 2026</p>
 
         <Section title="1. Introduction">
           <p>
-            This Privacy Policy describes how Hide COD for Gift Cards
+            This Privacy Policy describes how CODBlock
             (&ldquo;the App&rdquo;), developed by Mellow Muffin Apps
             (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;),
             collects, uses, and discloses information when you install and use
