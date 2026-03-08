@@ -1,6 +1,11 @@
 import { json } from "@remix-run/node";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useSubmit, useNavigation } from "@remix-run/react";
+import {
+  useLoaderData,
+  useActionData,
+  useSubmit,
+  useNavigation,
+} from "@remix-run/react";
 import {
   Page,
   Layout,
@@ -133,35 +138,66 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin } = await authenticate.admin(request);
-  const formData = await request.formData();
-  const intent = formData.get("intent");
+  try {
+    const { admin } = await authenticate.admin(request);
+    const formData = await request.formData();
+    const intent = formData.get("intent");
 
-  const ourFunction = await findFunction(admin);
-  if (!ourFunction) {
-    return json({
-      status: "not_deployed" as const,
-      enabled: false,
-      message: "Could not find the Hide COD function. Deploy the extension first.",
-    });
-  }
+    const ourFunction = await findFunction(admin);
+    if (!ourFunction) {
+      return json({
+        status: "not_deployed" as const,
+        enabled: false,
+        message:
+          "Could not find the Hide COD function. Deploy the extension first.",
+      });
+    }
 
-  const existing = await findExistingCustomization(admin, ourFunction.id);
+    const existing = await findExistingCustomization(admin, ourFunction.id);
 
-  if (intent === "activate") {
-    if (!existing) {
-      const createResponse = await admin.graphql(PAYMENT_CUSTOMIZATION_CREATE, {
-        variables: {
-          paymentCustomization: {
-            functionId: ourFunction.id,
-            title: "Hide COD for Gift Cards",
-            enabled: true,
+    if (intent === "activate") {
+      if (!existing) {
+        const createResponse = await admin.graphql(
+          PAYMENT_CUSTOMIZATION_CREATE,
+          {
+            variables: {
+              paymentCustomization: {
+                functionId: ourFunction.id,
+                title: "Hide COD for Gift Cards",
+                enabled: true,
+              },
+            },
+          },
+        );
+        const createData = await createResponse.json();
+        const userErrors =
+          createData.data?.paymentCustomizationCreate?.userErrors ?? [];
+        if (userErrors.length > 0) {
+          return json({
+            status: "error" as const,
+            enabled: false,
+            message: userErrors.map((e: any) => e.message).join(", "),
+          });
+        }
+        return json({
+          status: "active" as const,
+          enabled: true,
+          message: "Payment customization activated successfully.",
+        });
+      }
+
+      const updateResponse = await admin.graphql(
+        PAYMENT_CUSTOMIZATION_UPDATE,
+        {
+          variables: {
+            id: existing.id,
+            paymentCustomization: { enabled: true },
           },
         },
-      });
-      const createData = await createResponse.json();
+      );
+      const updateData = await updateResponse.json();
       const userErrors =
-        createData.data?.paymentCustomizationCreate?.userErrors ?? [];
+        updateData.data?.paymentCustomizationUpdate?.userErrors ?? [];
       if (userErrors.length > 0) {
         return json({
           status: "error" as const,
@@ -172,69 +208,65 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return json({
         status: "active" as const,
         enabled: true,
-        message: "Payment customization activated successfully.",
+        message: "Payment customization enabled successfully.",
       });
     }
 
-    const updateResponse = await admin.graphql(PAYMENT_CUSTOMIZATION_UPDATE, {
-      variables: {
-        id: existing.id,
-        paymentCustomization: { enabled: true },
-      },
-    });
-    const updateData = await updateResponse.json();
-    const userErrors =
-      updateData.data?.paymentCustomizationUpdate?.userErrors ?? [];
-    if (userErrors.length > 0) {
+    if (intent === "deactivate" && existing) {
+      const updateResponse = await admin.graphql(
+        PAYMENT_CUSTOMIZATION_UPDATE,
+        {
+          variables: {
+            id: existing.id,
+            paymentCustomization: { enabled: false },
+          },
+        },
+      );
+      const updateData = await updateResponse.json();
+      const userErrors =
+        updateData.data?.paymentCustomizationUpdate?.userErrors ?? [];
+      if (userErrors.length > 0) {
+        return json({
+          status: "error" as const,
+          enabled: existing.enabled,
+          message: userErrors.map((e: any) => e.message).join(", "),
+        });
+      }
       return json({
-        status: "error" as const,
+        status: "disabled" as const,
         enabled: false,
-        message: userErrors.map((e: any) => e.message).join(", "),
+        message: "Payment customization has been disabled.",
       });
     }
-    return json({
-      status: "active" as const,
-      enabled: true,
-      message: "Payment customization enabled successfully.",
-    });
-  }
 
-  if (intent === "deactivate" && existing) {
-    const updateResponse = await admin.graphql(PAYMENT_CUSTOMIZATION_UPDATE, {
-      variables: {
-        id: existing.id,
-        paymentCustomization: { enabled: false },
-      },
-    });
-    const updateData = await updateResponse.json();
-    const userErrors =
-      updateData.data?.paymentCustomizationUpdate?.userErrors ?? [];
-    if (userErrors.length > 0) {
-      return json({
-        status: "error" as const,
-        enabled: existing.enabled,
-        message: userErrors.map((e: any) => e.message).join(", "),
-      });
-    }
     return json({
-      status: "disabled" as const,
+      status: "error" as const,
       enabled: false,
-      message: "Payment customization has been disabled.",
+      message: "Unknown action.",
+    });
+  } catch (error) {
+    console.error("Action error:", error);
+    if (error instanceof Response) throw error;
+    return json({
+      status: "error" as const,
+      enabled: false,
+      message:
+        error instanceof Error
+          ? `Error: ${error.message}`
+          : "An unexpected error occurred.",
     });
   }
-
-  return json({
-    status: "error" as const,
-    enabled: false,
-    message: "Unknown action.",
-  });
 };
 
 export default function Index() {
-  const { status, enabled, message } = useLoaderData<typeof loader>();
+  const loaderData = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
   const submit = useSubmit();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+
+  const data = actionData ?? loaderData;
+  const { status, enabled, message } = data;
 
   const handleActivate = () => {
     submit({ intent: "activate" }, { method: "post" });
