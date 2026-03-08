@@ -1,0 +1,20 @@
+query RunInput {
+  cart {
+    lines {
+      merchandise {
+        ... on ProductVariant {
+          product {
+            isGiftCard
+          }
+        }
+        ... on CustomProduct {
+          isGiftCard
+        }
+      }
+    }
+  }
+  paymentMethods {
+    id
+    name
+  }
+}
